@@ -41,11 +41,9 @@ const Editor = (props) => {
   // on join sync codex
 
   useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
-        editorRef.current.setValue(code);
-      });
-    }
+    socketRef.current.on(ACTIONS.SYNC_CODE, ({ code }) => {
+      editorRef.current.setValue(code);
+    });
   }, [socketRef]);
 
   return (
