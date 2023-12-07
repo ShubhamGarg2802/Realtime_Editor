@@ -48,9 +48,9 @@ const EditorPage = () => {
             code: codeRef.current,
             socketId,
           });
+          console.log("joined", username, "code", codeRef.current);
         }
       );
-
       //Listening for disconnected
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
@@ -90,7 +90,7 @@ const EditorPage = () => {
       <div className="aside">
         <div className="asideInner">
           <div className="logo">
-            <img className="logoImage" src="/Code Fuse Logo.png" alt="" />
+            <img className="logoImage" src="/CodeFuseLogo.png" alt="" />
           </div>
           <h3>Connected</h3>
           <div className="clientsList">
@@ -107,13 +107,16 @@ const EditorPage = () => {
         </button>
       </div>
       <div className="editorWrap">
-        <Editor
-          socketRef={socketRef}
-          roomId={roomId}
-          onCodeChange={(code) => {
-            codeRef.current = code;
-          }}
-        />
+        {socketRef.current && (
+          <Editor
+            socketRef={socketRef}
+            roomId={roomId}
+            onCodeChange={(code) => {
+              codeRef.current = code;
+            }}
+            username={location.state?.username}
+          />
+        )}
       </div>
     </div>
   );

@@ -37,11 +37,12 @@ function getAllConnectedClients(roomId) {
   }
   return clients;
 }
+const codeStore = {};
 
 io.on("connection", (socket) => {
   console.log("socket connected", socket.id);
-
-  socket.on(ACTIONS.JOIN, ({ roomId, username}) => {
+  console.log("codeStore", codeStore);
+  socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     userSocketMap[socket.id] = username;
     socket.join(roomId);
     const clients = getAllConnectedClients(roomId);
@@ -54,8 +55,16 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-    socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+  socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code, username }) => {
+    if (!codeStore[roomId]) {
+      codeStore[roomId] = {
+        [username]: code,
+      };
+    } else {
+      codeStore[roomId][username] = code;
+    }
+    console.log("codeStore", codeStore);
+    socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code, username,codeStore });
   });
 
   socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useRef } from "react";
 import Codemirror from "codemirror";
 import "codemirror/lib/codemirror.css";
@@ -8,8 +9,17 @@ import "codemirror/addon/edit/closebrackets.js";
 import ACTIONS from "../Actions";
 
 const Editor = (props) => {
-  const { socketRef, roomId, onCodeChange } = props;
+  const { socketRef, roomId, onCodeChange, username } = props;
   const editorRef = useRef(null);
+  useEffect(() => {
+    if (!editorRef.current) return;
+    setTimeout(() => {
+      editorRef.current.on("change", (doc) => {
+        const code = doc.getValue();
+        socketRef.current.emit(ACTIONS.CODE_CHANGE, { roomId, code, username });
+      });
+    }, 100);
+  }, [onCodeChange, roomId, socketRef, username]);
   useEffect(() => {
     async function init() {
       editorRef.current = Codemirror.fromTextArea(
@@ -22,29 +32,15 @@ const Editor = (props) => {
           lineNumbers: true,
         }
       );
-
-      editorRef.current.on("change", (instance, changes) => {
-        const { origin } = changes;
-        const code = instance.getValue();
-        console.log("code", code);
-        onCodeChange(code);
-        if (origin !== "setValue") {
-          socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-            roomId,
-            code,
-          });
-        }
-      });
     }
     init();
-  }, [roomId, onCodeChange, socketRef]);
-  // on join sync codex
-
+  }, []);
   useEffect(() => {
-    socketRef.current.on(ACTIONS.SYNC_CODE, ({ code }) => {
+    socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+      if (code === editorRef.current.getValue()) return;
       editorRef.current.setValue(code);
     });
-  }, [socketRef]);
+  });
 
   return (
     <div>
